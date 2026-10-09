@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  CGO_ENABLED: '1'
+  GOMAXPROCS: '4'
+  GOTOOLCHAIN: local
+  GOWORK: 'off'
+  GOFLAGS: -mod=readonly
+
+jobs:
+  checks:
+    name: Race and vet
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      race: ${{ steps.race.outcome }}
+      vet: ${{ steps.vet.outcome }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.mod
+      - name: Check toolchain and prepare dependencies
+        run: |
+          go version
+          cc --version
+          go mod download
+          git diff --exit-code -- go.mod go.sum
+      - name: Race tests
+        id: race
+        run: go test -race -vet=off -count=1 ./...
+      - name: Vet
+        id: vet
+        run: go vet ./...
+
+  summary:
+    name: CI summary
+    if: ${{ always() }}
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Report and require success
+        env:
+          CHECKS_RESULT: ${{ needs.checks.result }}
+          RACE_RESULT: ${{ needs.checks.outputs.race }}
+          VET_RESULT: ${{ needs.checks.outputs.vet }}
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          {
+            printf 'Source commit: `%s`\n\n' "$SOURCE_SHA"
+            printf '| Check | Result |\n| --- | --- |\n'
+            printf '| Race tests | %s |\n' "${RACE_RESULT:-not run}"
+            printf '| Vet | %s |\n' "${VET_RESULT:-not run}"
+            printf '| Overall | %s |\n' "$CHECKS_RESULT"
+          } >> "$GITHUB_STEP_SUMMARY"
+          test "$CHECKS_RESULT" = success
