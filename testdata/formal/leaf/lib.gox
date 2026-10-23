@@ -1,0 +1,8 @@
+package leaf
+use serde as wire;
+
+#[derive(wire::derive::Serialize, wire::derive::Deserialize)]
+pub struct Packet[T any] { pub Values []T; pub Pair [2]T }
+
+#[derive(wire::derive::Serialize, wire::derive::Deserialize)]
+pub enum GenericEvent[T any] { Empty, Payload(T) }

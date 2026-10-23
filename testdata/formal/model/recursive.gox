@@ -1,0 +1,8 @@
+package model
+use serde;
+
+#[derive(serde::derive::Serialize,serde::derive::Deserialize)]
+pub struct Node { pub Value int; pub Next *Node }
+
+pub func EncodeNode(serializer serde::Serializer,value &Node) error { return serde::Write(serializer,value) }
+pub func DecodeNode(deserializer serde::Deserializer) (Node,error) { return serde::Read[Node](deserializer) }

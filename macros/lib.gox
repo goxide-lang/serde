@@ -1,0 +1,13 @@
+package serde_macros
+use syntax::token;
+use syntax::proc_macro as pm;
+
+#[proc_macro_derive(Serialize, attributes(serde))]
+pub func serialize(ctx pm::Context, input token::TokenStream) pm::Output {
+    return deriveSerde(ctx, input, true)
+}
+
+#[proc_macro_derive(Deserialize, attributes(serde))]
+pub func deserialize(ctx pm::Context, input token::TokenStream) pm::Output {
+    return deriveSerde(ctx, input, false)
+}

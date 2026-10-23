@@ -1,0 +1,25 @@
+package serde
+
+pub mod json;
+pub use serde_macros as derive;
+
+pub trait Serialize {
+    func serialize(self &Self, serializer Serializer) error
+}
+
+pub trait Deserialize {
+    func deserialize(deserializer Deserializer) (Self, error)
+    func missing() (Self, bool)
+}
+
+// Write has the callback order expected by json::Marshal.
+pub func Write[T Serialize](serializer Serializer, value &T) error {
+    if value == nil { return NewError(Type, "nil value") }
+    return Serialize::serialize(value, serializer)
+}
+
+pub func Read[T Deserialize](deserializer Deserializer) (T, error) {
+    return T::deserialize(deserializer)
+}
+
+pub func Missing[T Deserialize]() (T, bool) { return T::missing() }

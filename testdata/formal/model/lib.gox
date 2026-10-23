@@ -1,0 +1,105 @@
+package model
+use serde;
+use standard as foundation;
+use leaf;
+
+type Amount = int
+type Optional = Option[int]
+
+#[derive(serde::derive::Serialize, serde::derive::Deserialize)]
+pub enum Event { Idle, Count(int), Object { Value int } }
+
+#[derive(serde::derive::Serialize, serde::derive::Deserialize)]
+pub enum Status { #[serde(value=-1)] Cold, #[serde(value=2)] Hot }
+
+#[derive(serde::derive::Serialize, serde::derive::Deserialize)]
+pub enum Label { #[serde(rename="ready")] Ready, Busy }
+
+#[derive(serde::derive::Serialize, serde::derive::Deserialize)]
+pub enum Empty {}
+
+#[derive(serde::derive::Serialize, serde::derive::Deserialize)]
+pub struct Record {
+    #[serde(rename="packet")]
+    pub Packet leaf::Packet[int]
+    pub Event Event
+    pub Generic leaf::GenericEvent[string]
+    pub Array [2]int
+    pub Slice []int
+    pub Bytes []byte
+    pub Map map[string]int
+    pub Pointer *int
+    pub Optional Optional
+    pub Amount Amount
+    pub Small int8
+}
+
+var trace string
+pub func ResetDefaults() { trace = "" }
+pub func DefaultTrace() string { return trace }
+type first int
+type last int
+type skipped struct { pub Index int }
+impl foundation::Default for first { func r#default() Self { trace += "F"; return first(len(trace)) } }
+impl foundation::Default for skipped { func r#default() Self { trace += "S"; return Self{Index:len(trace)} } }
+impl foundation::Default for last { func r#default() Self { trace += "L"; return last(len(trace)) } }
+impl serde::Deserialize for first {
+    func deserialize(reader serde::Deserializer)(Self,error){value,err:=serde::Read[int](reader);return first(value),err}
+    func missing()(Self,bool){return 0,false}
+}
+impl serde::Deserialize for last {
+    func deserialize(reader serde::Deserializer)(Self,error){value,err:=serde::Read[int](reader);return last(value),err}
+    func missing()(Self,bool){return 0,false}
+}
+
+#[derive(serde::derive::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Defaults {
+    #[serde(default)] pub First first
+    #[serde(skip)] pub Ignored skipped
+    #[serde(default)] pub Last last
+    pub Required *int
+    pub Optional Optional
+}
+
+type WriteOnly int
+impl serde::Serialize for WriteOnly { func serialize(self &Self, writer serde::Serializer)error{return writer.Int64(int64(*self))} }
+#[derive(serde::derive::Serialize)]
+pub struct SerializeOnly {
+    #[serde(default)] pub Value WriteOnly
+    #[serde(skip)] pub Hidden func()
+}
+type ReadOnly int
+impl serde::Deserialize for ReadOnly {
+    func deserialize(reader serde::Deserializer)(Self,error){value,err:=serde::Read[int](reader);return ReadOnly(value),err}
+    func missing()(Self,bool){return 0,false}
+}
+#[derive(serde::derive::Deserialize)]
+pub struct DeserializeOnly { pub Value ReadOnly }
+
+pub func EncodeRecord(writer serde::Serializer, value &Record)error{return serde::Write(writer,value)}
+pub func DecodeRecord(reader serde::Deserializer)(Record,error){return serde::Read[Record](reader)}
+pub func DecodeDefaults(reader serde::Deserializer)(Defaults,error){return serde::Read[Defaults](reader)}
+pub func EncodeOnly(writer serde::Serializer, value &SerializeOnly)error{return serde::Write(writer,value)}
+pub func DecodeOnly(reader serde::Deserializer)(DeserializeOnly,error){return serde::Read[DeserializeOnly](reader)}
+pub func EncodeEvent(writer serde::Serializer, value &Event)error{return serde::Write(writer,value)}
+pub func DecodeEvent(reader serde::Deserializer)(Event,error){return serde::Read[Event](reader)}
+pub func EncodeStatus(writer serde::Serializer, value &Status)error{return serde::Write(writer,value)}
+pub func DecodeStatus(reader serde::Deserializer)(Status,error){return serde::Read[Status](reader)}
+pub func EncodeLabel(writer serde::Serializer, value &Label)error{return serde::Write(writer,value)}
+pub func DecodeLabel(reader serde::Deserializer)(Label,error){return serde::Read[Label](reader)}
+pub func EncodeEmpty(writer serde::Serializer, value &Empty)error{return serde::Write(writer,value)}
+pub func DecodeEmpty(reader serde::Deserializer)(Empty,error){return serde::Read[Empty](reader)}
+pub func ReadSmall(reader serde::Deserializer)(int8,error){return serde::Read[int8](reader)}
+pub func ReadUnsigned(reader serde::Deserializer)(uint8,error){return serde::Read[uint8](reader)}
+pub func ReadFloat32(reader serde::Deserializer)(float32,error){return serde::Read[float32](reader)}
+pub func NestedSomeNone() Option[Option[int]] { return Option[Option[int]]::Some(Option[int]::None) }
+pub func EncodeNested(writer serde::Serializer,value &Option[Option[int]])error{return serde::Write(writer,value)}
+
+pub func SourceCallbacks() bool {
+    // Read and Write are ordinary generic function values, including native Go callbacks.
+    value,err:=serde::json::Unmarshal([]byte("{\"Value\":19}"),serde::Read[DeserializeOnly])
+    if err!=nil||value.Value!=19{return false}
+    data,err:=serde::json::Marshal(&SerializeOnly{Value:17},serde::Write[SerializeOnly])
+    return err==nil&&string(data)=="{\"Value\":17}"
+}

@@ -1,0 +1,208 @@
+package serde
+
+impl crate::Serialize for bool {
+    func serialize(self &Self, serializer Serializer) error { return serializer.Bool(*self) }
+}
+impl crate::Deserialize for bool {
+    func deserialize(deserializer Deserializer) (Self, error) {
+        var result Self
+        value, err := ReadBool(deserializer)
+        if err != nil { return result, err }
+        result = bool(value)
+        return result, nil
+    }
+    func missing() (Self, bool) { var zero Self; return zero, false }
+}
+
+impl crate::Serialize for string {
+    func serialize(self &Self, serializer Serializer) error { return serializer.String(*self) }
+}
+impl crate::Deserialize for string {
+    func deserialize(deserializer Deserializer) (Self, error) {
+        var result Self
+        value, err := ReadString(deserializer)
+        if err != nil { return result, err }
+        result = string(value)
+        return result, nil
+    }
+    func missing() (Self, bool) { var zero Self; return zero, false }
+}
+
+impl crate::Serialize for int {
+    func serialize(self &Self, serializer Serializer) error { return serializer.Int64(int64(*self)) }
+}
+impl crate::Deserialize for int {
+    func deserialize(deserializer Deserializer) (Self, error) {
+        var result Self
+        value, err := ReadInt64(deserializer)
+        if err != nil { return result, err }
+        result = int(value)
+        if int64(result) != value { return result, NewError(Range, "int overflow") }
+        return result, nil
+    }
+    func missing() (Self, bool) { var zero Self; return zero, false }
+}
+
+impl crate::Serialize for int8 {
+    func serialize(self &Self, serializer Serializer) error { return serializer.Int64(int64(*self)) }
+}
+impl crate::Deserialize for int8 {
+    func deserialize(deserializer Deserializer) (Self, error) {
+        var result Self
+        value, err := ReadInt64(deserializer)
+        if err != nil { return result, err }
+        result = int8(value)
+        if int64(result) != value { return result, NewError(Range, "int8 overflow") }
+        return result, nil
+    }
+    func missing() (Self, bool) { var zero Self; return zero, false }
+}
+
+impl crate::Serialize for int16 {
+    func serialize(self &Self, serializer Serializer) error { return serializer.Int64(int64(*self)) }
+}
+impl crate::Deserialize for int16 {
+    func deserialize(deserializer Deserializer) (Self, error) {
+        var result Self
+        value, err := ReadInt64(deserializer)
+        if err != nil { return result, err }
+        result = int16(value)
+        if int64(result) != value { return result, NewError(Range, "int16 overflow") }
+        return result, nil
+    }
+    func missing() (Self, bool) { var zero Self; return zero, false }
+}
+
+impl crate::Serialize for int32 {
+    func serialize(self &Self, serializer Serializer) error { return serializer.Int64(int64(*self)) }
+}
+impl crate::Deserialize for int32 {
+    func deserialize(deserializer Deserializer) (Self, error) {
+        var result Self
+        value, err := ReadInt64(deserializer)
+        if err != nil { return result, err }
+        result = int32(value)
+        if int64(result) != value { return result, NewError(Range, "int32 overflow") }
+        return result, nil
+    }
+    func missing() (Self, bool) { var zero Self; return zero, false }
+}
+
+impl crate::Serialize for int64 {
+    func serialize(self &Self, serializer Serializer) error { return serializer.Int64(int64(*self)) }
+}
+impl crate::Deserialize for int64 {
+    func deserialize(deserializer Deserializer) (Self, error) {
+        var result Self
+        value, err := ReadInt64(deserializer)
+        if err != nil { return result, err }
+        result = int64(value)
+        if int64(result) != value { return result, NewError(Range, "int64 overflow") }
+        return result, nil
+    }
+    func missing() (Self, bool) { var zero Self; return zero, false }
+}
+
+impl crate::Serialize for uint {
+    func serialize(self &Self, serializer Serializer) error { return serializer.Uint64(uint64(*self)) }
+}
+impl crate::Deserialize for uint {
+    func deserialize(deserializer Deserializer) (Self, error) {
+        var result Self
+        value, err := ReadUint64(deserializer)
+        if err != nil { return result, err }
+        result = uint(value)
+        if uint64(result) != value { return result, NewError(Range, "uint overflow") }
+        return result, nil
+    }
+    func missing() (Self, bool) { var zero Self; return zero, false }
+}
+
+impl crate::Serialize for uint8 {
+    func serialize(self &Self, serializer Serializer) error { return serializer.Uint64(uint64(*self)) }
+}
+impl crate::Deserialize for uint8 {
+    func deserialize(deserializer Deserializer) (Self, error) {
+        var result Self
+        value, err := ReadUint64(deserializer)
+        if err != nil { return result, err }
+        result = uint8(value)
+        if uint64(result) != value { return result, NewError(Range, "uint8 overflow") }
+        return result, nil
+    }
+    func missing() (Self, bool) { var zero Self; return zero, false }
+}
+
+impl crate::Serialize for uint16 {
+    func serialize(self &Self, serializer Serializer) error { return serializer.Uint64(uint64(*self)) }
+}
+impl crate::Deserialize for uint16 {
+    func deserialize(deserializer Deserializer) (Self, error) {
+        var result Self
+        value, err := ReadUint64(deserializer)
+        if err != nil { return result, err }
+        result = uint16(value)
+        if uint64(result) != value { return result, NewError(Range, "uint16 overflow") }
+        return result, nil
+    }
+    func missing() (Self, bool) { var zero Self; return zero, false }
+}
+
+impl crate::Serialize for uint32 {
+    func serialize(self &Self, serializer Serializer) error { return serializer.Uint64(uint64(*self)) }
+}
+impl crate::Deserialize for uint32 {
+    func deserialize(deserializer Deserializer) (Self, error) {
+        var result Self
+        value, err := ReadUint64(deserializer)
+        if err != nil { return result, err }
+        result = uint32(value)
+        if uint64(result) != value { return result, NewError(Range, "uint32 overflow") }
+        return result, nil
+    }
+    func missing() (Self, bool) { var zero Self; return zero, false }
+}
+
+impl crate::Serialize for uint64 {
+    func serialize(self &Self, serializer Serializer) error { return serializer.Uint64(uint64(*self)) }
+}
+impl crate::Deserialize for uint64 {
+    func deserialize(deserializer Deserializer) (Self, error) {
+        var result Self
+        value, err := ReadUint64(deserializer)
+        if err != nil { return result, err }
+        result = uint64(value)
+        if uint64(result) != value { return result, NewError(Range, "uint64 overflow") }
+        return result, nil
+    }
+    func missing() (Self, bool) { var zero Self; return zero, false }
+}
+
+impl crate::Serialize for float32 {
+    func serialize(self &Self, serializer Serializer) error { return serializer.Float64(float64(*self)) }
+}
+impl crate::Deserialize for float32 {
+    func deserialize(deserializer Deserializer) (Self, error) {
+        var result Self
+        value, err := ReadFloat64(deserializer)
+        if err != nil { return result, err }
+        if value > 3.4028234663852886e38 || value < -3.4028234663852886e38 || (value != 0 && float32(value) == 0) { return result, NewError(Range, "float32 overflow or underflow") }
+        result = float32(value)
+        return result, nil
+    }
+    func missing() (Self, bool) { var zero Self; return zero, false }
+}
+
+impl crate::Serialize for float64 {
+    func serialize(self &Self, serializer Serializer) error { return serializer.Float64(float64(*self)) }
+}
+impl crate::Deserialize for float64 {
+    func deserialize(deserializer Deserializer) (Self, error) {
+        var result Self
+        value, err := ReadFloat64(deserializer)
+        if err != nil { return result, err }
+        result = float64(value)
+        return result, nil
+    }
+    func missing() (Self, bool) { var zero Self; return zero, false }
+}

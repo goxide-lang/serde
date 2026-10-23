@@ -1,0 +1,64 @@
+package model
+use fmt;
+use serde;
+use serde::json as json;
+use standard as foundation;
+
+var groupedTrace string
+type (
+    #[derive(serde::derive::Serialize, serde::derive::Deserialize)]
+    Setting struct { Value int }
+)
+impl foundation::Default for Setting {
+    func r#default() Self { groupedTrace += "D"; return Setting{Value:7} }
+}
+type Local struct { Value string }
+impl foundation::Default for Local {
+    func r#default() Self { groupedTrace += "S"; return Local{Value:"local"} }
+}
+#[derive(serde::derive::Serialize, serde::derive::Deserialize)]
+#[serde(deny_unknown_fields)]
+type GroupedRecord struct {
+    #[serde(rename="id")] Required int
+    #[serde(default)] First Setting
+    #[serde(skip)] Hidden Local
+    #[serde(default)] Second Setting
+    Optional Option[int]
+}
+
+pub func GroupedSerdeReport() string {
+    groupedTrace = ""
+    value,err:=json::Unmarshal([]byte("{\"id\":2,\"Hidden\":{\"ignored\":1}}"),serde::Read[GroupedRecord])
+    first:=fmt::Sprintf("%d %d %s %d %s %t\n",value.Required,value.First.Value,value.Hidden.Value,value.Second.Value,groupedTrace,err==nil)
+    data,err:=json::Marshal(&value,serde::Write[GroupedRecord])
+    second:=fmt::Sprintf("%s %t\n",string(data),err==nil)
+    groupedTrace=""
+    _,missing:=json::Unmarshal([]byte("{}"),serde::Read[GroupedRecord])
+    _,duplicate:=json::Unmarshal([]byte("{\"id\":1,\"id\":2}"),serde::Read[GroupedRecord])
+    _,unknown:=json::Unmarshal([]byte("{\"id\":1,\"extra\":2}"),serde::Read[GroupedRecord])
+    return first+second+fmt::Sprintf("%t %t %t %q\n",missing!=nil,duplicate!=nil,unknown!=nil,groupedTrace)
+}
+
+macro_rules! named {
+    ($owner:ident) => {
+        #[derive(foundation::derive::Error,serde::derive::Serialize,serde::derive::Deserialize)]
+        #[error("failure")]
+        type $owner struct{}
+    };
+}
+named!(Alpha)
+named!(Beta)
+named!(Gamma)
+named!(Delta)
+named!(Epsilon)
+named!(Zeta)
+
+func macroEmpty[T any](_ T) bool where T:serde::Serialize,T:serde::Deserialize {
+    value,err:=json::Unmarshal([]byte("{}"),serde::Read[T])
+    if err!=nil{return false}
+    data,err:=json::Marshal(&value,serde::Write[T])
+    return err==nil&&string(data)=="{}"
+}
+pub func MacroSerdeRoundTrip() bool {
+    return macroEmpty(Alpha{})&&macroEmpty(Beta{})&&macroEmpty(Gamma{})&&macroEmpty(Delta{})&&macroEmpty(Epsilon{})&&macroEmpty(Zeta{})
+}

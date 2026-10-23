@@ -1,0 +1,153 @@
+package serde
+use sort;
+
+impl[T Serialize] crate::Serialize for []T {
+    func serialize(self &Self, serializer Serializer) error {
+        sequence, err := serializer.Seq(len(*self))
+        if err != nil { return err }
+        for index := range *self {
+            if err := sequence.Element(func(child Serializer) error { return Write(child, &(*self)[index]) }); err != nil { return err }
+        }
+        return sequence.End()
+    }
+}
+impl[T Deserialize] crate::Deserialize for []T {
+    func deserialize(deserializer Deserializer) (Self, error) {
+        result := make([]T, 0)
+        err := deserializer.Seq(VisitorFuncs{OnSeq: func(sequence SeqAccess) error {
+            for {
+                more, err := sequence.NextElement(func(child Deserializer) error {
+                    value, err := Read[T](child)
+                    if err != nil { return err }
+                    result = append(result, value)
+                    return nil
+                })
+                if err != nil { return err }
+                if !more { break }
+            }
+            return nil
+        }})
+        return result, err
+    }
+    func missing() (Self, bool) { var zero Self; return zero, false }
+}
+impl[T Serialize, const N int] crate::Serialize for [N]T {
+    func serialize(self &Self, serializer Serializer) error {
+        sequence, err := serializer.Seq(len(*self))
+        if err != nil { return err }
+        for index := range *self {
+            if err := sequence.Element(func(child Serializer) error { return Write(child, &(*self)[index]) }); err != nil { return err }
+        }
+        return sequence.End()
+    }
+}
+impl[T Deserialize, const N int] crate::Deserialize for [N]T {
+    func deserialize(deserializer Deserializer) (Self, error) {
+        var result [N]T
+        index := 0
+        err := deserializer.Seq(VisitorFuncs{OnSeq: func(sequence SeqAccess) error {
+            for {
+                more, err := sequence.NextElement(func(child Deserializer) error {
+                    if index >= len(result) { return NewError(Range, "too many array elements") }
+                    value, err := Read[T](child)
+                    if err != nil { return err }
+                    result[index] = value
+                    index++
+                    return nil
+                })
+                if err != nil { return err }
+                if !more { break }
+            }
+            if index != len(result) { return NewError(Range, "wrong array length") }
+            return nil
+        }})
+        return result, err
+    }
+    func missing() (Self, bool) { var zero Self; return zero, false }
+}
+
+impl[T Serialize] crate::Serialize for map[string]T {
+    func serialize(self &Self, serializer Serializer) error {
+        writer, err := serializer.Map(len(*self))
+        if err != nil { return err }
+        keys := make([]string, 0, len(*self))
+        for key := range *self { keys = append(keys, key) }
+        sort::Strings(keys)
+        for _, key := range keys {
+            value := (*self)[key]
+            if err := writer.Entry(func(child Serializer) error { return child.String(key) }, func(child Serializer) error { return Write(child, &value) }); err != nil { return err }
+        }
+        return writer.End()
+    }
+}
+impl[T Deserialize] crate::Deserialize for map[string]T {
+    func deserialize(deserializer Deserializer) (Self, error) {
+        result := make(Self)
+        err := deserializer.Map(VisitorFuncs{OnMap: func(fields MapAccess) error {
+            for {
+                var key string
+                more, err := fields.NextKey(func(child Deserializer) error { value, err := ReadString(child); key = value; return err })
+                if err != nil { return err }
+                if !more { break }
+                if _, exists := result[key]; exists { return AtField(NewError(DuplicateField, "duplicate map key"), key) }
+                if err := fields.NextValue(func(child Deserializer) error {
+                    value, err := Read[T](child)
+                    if err != nil { return err }
+                    result[key] = value
+                    return nil
+                }); err != nil { return err }
+            }
+            return nil
+        }})
+        return result, err
+    }
+    func missing() (Self, bool) { var zero Self; return zero, false }
+}
+
+impl[T Serialize] crate::Serialize for Option[T] {
+    func serialize(self &Self, serializer Serializer) error {
+        if !enum_valid(*self) { return NewError(Type, "invalid Option") }
+        return match &*self {
+            Option::None => serializer.None(),
+            Option::Some(value) => serializer.Some(func(child Serializer) error { return Write(child, value) }),
+        }
+    }
+}
+impl[T Deserialize] crate::Deserialize for Option[T] {
+    func deserialize(deserializer Deserializer) (Self, error) {
+        result := Option[T]::None
+        err := deserializer.Option(VisitorFuncs{
+            OnNone: func() error { result = Option[T]::None; return nil },
+            OnSome: func(child Deserializer) error {
+                value, err := Read[T](child)
+                if err != nil { return err }
+                result = Option[T]::Some(value)
+                return nil
+            },
+        })
+        return result, err
+    }
+    func missing() (Self, bool) { return Option[T]::None, true }
+}
+impl[T Serialize] crate::Serialize for *T {
+    func serialize(self &Self, serializer Serializer) error {
+        if *self == nil { return serializer.None() }
+        return serializer.Some(func(child Serializer) error { return Write(child, &**self) })
+    }
+}
+impl[T Deserialize] crate::Deserialize for *T {
+    func deserialize(deserializer Deserializer) (Self, error) {
+        var result *T
+        err := deserializer.Option(VisitorFuncs{
+            OnNone: func() error { result = nil; return nil },
+            OnSome: func(child Deserializer) error {
+                value, err := Read[T](child)
+                if err != nil { return err }
+                result = &value
+                return nil
+            },
+        })
+        return result, err
+    }
+    func missing() (Self, bool) { return nil, false }
+}
