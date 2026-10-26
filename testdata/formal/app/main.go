@@ -26,6 +26,7 @@ func main() {
 }
 
 func verify() {
+	model.CheckStringSugar()
 	wantGrouped := "2 7 local 7 DSD true\n{\"id\":2,\"First\":{\"Value\":7},\"Second\":{\"Value\":7},\"Optional\":null} true\ntrue true true \"\"\n"
 	require(model.GroupedSerdeReport() == wantGrouped, "grouped declaration, defaults and field validation")
 	for _, value := range []error{model.Alpha{}, model.Beta{}, model.Gamma{}, model.Delta{}, model.Epsilon{}, model.Zeta{}} {

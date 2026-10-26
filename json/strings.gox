@@ -1,0 +1,13 @@
+package serdejson
+
+// FromString decodes one JSON value using T's Deserialize implementation.
+pub func FromString[T crate::Deserialize](str string) (T, error) {
+    return Unmarshal([]byte(str), crate::Read[T])
+}
+
+// ToString encodes a borrowed value using T's Serialize implementation.
+pub func ToString[T crate::Serialize](t &T) (string, error) {
+    data, err := Marshal(t, crate::Write[T])
+    if err != nil { return "", err }
+    return string(data), nil
+}

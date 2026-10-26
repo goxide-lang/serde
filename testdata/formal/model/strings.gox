@@ -1,0 +1,48 @@
+package model
+use serde;
+use serde::json as json;
+use errors;
+use strconv;
+
+pub func CheckStringSugar() {
+    number, err := json::FromString[int]("42")
+    if err != nil || number != 42 { panic("FromString scalar") }
+    text, err := json::ToString(&number)
+    if err != nil || text != "42" { panic("ToString inferred scalar") }
+    text, err = json::ToString[int](&number)
+    if err != nil || text != "42" { panic("ToString explicit scalar") }
+
+    record, err := json::FromString[DeserializeOnly](`{"Value":19}`)
+    if err != nil || record.Value != 19 { panic("FromString Deserialize-only struct") }
+    output := SerializeOnly{Value:17}
+    text, err = json::ToString(&output)
+    if err != nil || text != `{"Value":17}` { panic("ToString Serialize-only struct") }
+
+    for _, input := range []string{`"Idle"`, `{"Count":42}`, `{"Object":43}`} {
+        event, err := json::FromString[Event](input)
+        if err != nil { panic(err) }
+        text, err := json::ToString(&event)
+        if err != nil || text != input { panic("string enum round trip") }
+    }
+    for _, input := range []string{"null", "7"} {
+        optional, err := json::FromString[Option[int]](input)
+        if err != nil { panic(err) }
+        text, err := json::ToString(&optional)
+        if err != nil || text != input { panic("string Option round trip") }
+    }
+
+    _, err = json::FromString[int]("1.5")
+    var cause *strconv::NumError
+    if !errors::As(err, &cause) { panic("FromString lost numeric cause") }
+    _, err = json::FromString[DeserializeOnly](`{"Value":"bad"}`)
+    var detail *serde::Error
+    if !errors::As(err, &detail) || detail.Kind != serde::Type || len(detail.Path) != 1 || detail.Path[0].Name != "Value" {
+        panic("FromString lost field path")
+    }
+    if _, err := json::FromString[int]("42 43"); err == nil { panic("FromString accepted trailing JSON") }
+    text, err = json::ToString[SerializeOnly](nil)
+    if !errors::As(err, &detail) || detail.Kind != serde::Type || text != "" { panic("ToString accepted nil reference") }
+    var invalid Event
+    text, err = json::ToString(&invalid)
+    if !errors::As(err, &detail) || detail.Kind != serde::Type || text != "" { panic("ToString accepted invalid enum") }
+}

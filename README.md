@@ -39,15 +39,17 @@ use serde::json as json;
 struct Config { Port int }
 
 func main() {
-    config, err := json::Unmarshal([]byte("{\"Port\":8080}"), serde::Read[Config])
+    config, err := json::FromString[Config](`{"Port":8080}`)
     if err != nil { panic(err) }
-    data, err := json::Marshal(&config, serde::Write[Config])
+    text, err := json::ToString(&config)
     if err != nil { panic(err) }
-    println(string(data))
+    println(text)
 }
 ```
 
-Use the serde and std versions pinned by the compiler. `serde::Read[T]` and `serde::Write[T]` are ordinary generic functions and can be passed as callbacks. Derives require the corresponding protocol for each field or payload; serialization and deserialization do not require one another. `#[serde(rename="name")]`, `#[serde(default)]`, `#[serde(skip)]` and container `#[serde(deny_unknown_fields)]` control struct fields. Deserialization defaults and skipped fields call the ordinary `std::Default` implementation in declaration order, after input and required fields have been validated.
+`json::FromString[T serde::Deserialize](str string) (T, error)` and `json::ToString[T serde::Serialize](t &T) (string, error)` are string conveniences over `Unmarshal` and `Marshal`. `ToString` accepts a read-only reference and can infer `T`; it returns an empty string on error, including a nil reference. `FromString` preserves the existing decoder's errors and partially decoded return value on failure; only use the returned value when the error is nil. Scalars, containers and derived types use the same ordinary protocols as the callback APIs.
+
+Use a serde release containing these helpers, or a local serde path dependency; an older compiler pin does not acquire new library APIs automatically. `serde::Read[T]` and `serde::Write[T]` remain available as callbacks for the byte-slice APIs. Derives require the corresponding protocol for each field or payload; serialization and deserialization do not require one another. `#[serde(rename="name")]`, `#[serde(default)]`, `#[serde(skip)]` and container `#[serde(deny_unknown_fields)]` control struct fields. Deserialization defaults and skipped fields call the ordinary `std::Default` implementation in declaration order, after input and required fields have been validated.
 
 ## JSON behavior
 
