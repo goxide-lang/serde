@@ -11,7 +11,7 @@ path = "macros"
 
 [dependencies.std]
 go = "github.com/goxide-lang/std"
-version = "v0.0.2-0.20261024103343-486aa5e95768"
+version = "v0.0.2"
 
 [[go.require]]
 module = "github.com/goxide-lang/syntax"
@@ -19,4 +19,4 @@ version = "v0.0.0-20261021034157-cb998fa4b2d4"
 
 [[go.require]]
 module = "github.com/goxide-lang/std"
-version = "v0.0.2-0.20261024103343-486aa5e95768"
+version = "v0.0.2"

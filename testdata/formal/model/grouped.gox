@@ -10,11 +10,11 @@ type (
     Setting struct { Value int }
 )
 impl foundation::Default for Setting {
-    func r#default() Self { groupedTrace += "D"; return Setting{Value:7} }
+    func Default() Self { groupedTrace += "D"; return Setting{Value:7} }
 }
 type Local struct { Value string }
 impl foundation::Default for Local {
-    func r#default() Self { groupedTrace += "S"; return Local{Value:"local"} }
+    func Default() Self { groupedTrace += "S"; return Local{Value:"local"} }
 }
 #[derive(serde::derive::Serialize, serde::derive::Deserialize)]
 #[serde(deny_unknown_fields)]

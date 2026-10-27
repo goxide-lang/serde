@@ -1,4 +1,6 @@
 github.com/goxide-lang/std v0.0.2-0.20261024103343-486aa5e95768 h1:e5FfD3kyHd5h0QevY7mXQRQAunmSBJgjUhl+gpmxw/U=
 github.com/goxide-lang/std v0.0.2-0.20261024103343-486aa5e95768/go.mod h1:Fy7RtA9YH48XZ9/yLsQJq7UKeaChA1T0slJ9YD9QOLk=
+github.com/goxide-lang/std v0.0.2 h1:Nl9tO3IEGVw9/D9eQBPduFa0vrZKKUGgnOVcewcI2RU=
+github.com/goxide-lang/std v0.0.2/go.mod h1:Fy7RtA9YH48XZ9/yLsQJq7UKeaChA1T0slJ9YD9QOLk=
 github.com/goxide-lang/syntax v0.0.0-20261021034157-cb998fa4b2d4 h1:7q2XjgjZpRi3DbIlPzO+cbnQCvd6Y3fZn44Xj9R1nkQ=
 github.com/goxide-lang/syntax v0.0.0-20261021034157-cb998fa4b2d4/go.mod h1:ixIlSxgWxhfOEi260QJThct5d+tE0jfW1TFaMxXh5Lg=

@@ -40,9 +40,9 @@ pub func DefaultTrace() string { return trace }
 type first int
 type last int
 type skipped struct { pub Index int }
-impl foundation::Default for first { func r#default() Self { trace += "F"; return first(len(trace)) } }
-impl foundation::Default for skipped { func r#default() Self { trace += "S"; return Self{Index:len(trace)} } }
-impl foundation::Default for last { func r#default() Self { trace += "L"; return last(len(trace)) } }
+impl foundation::Default for first { func Default() Self { trace += "F"; return first(len(trace)) } }
+impl foundation::Default for skipped { func Default() Self { trace += "S"; return Self{Index:len(trace)} } }
+impl foundation::Default for last { func Default() Self { trace += "L"; return last(len(trace)) } }
 impl serde::Deserialize for first {
     func deserialize(reader serde::Deserializer)(Self,error){value,err:=serde::Read[int](reader);return first(value),err}
     func missing()(Self,bool){return 0,false}
